@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ fault.intersection }} ({{ fault.public_id }}){% endblock %}
+{% block content %}
+{% if is_new %}
+<div class="banner ok" role="status">
+  <h2>Report sent to the city</h2>
+  <p>Your tracking ID is <strong>{{ fault.public_id }}</strong>. We’ll send a reminder every working day until it’s fixed.
+     <strong>Bookmark this page</strong> — it’s your private link for marking the light as fixed.</p>
+</div>
+{% elif is_dup %}
+<div class="banner ok" role="status">
+  <h2>Thank you — this light was already reported</h2>
+  <p>We added your report. The next reminder will tell the city that {{ fault.reporter_count }} people are affected.</p>
+</div>
+{% elif metoo %}
+<div class="banner ok" role="status">
+  <h2>Thanks — your report is counted</h2>
+  <p>{{ fault.reporter_count }} people have now reported this light.</p>
+</div>
+{% endif %}
+
+<h1>{{ fault.intersection }}{% if fault.suburb %}, {{ fault.suburb }}{% endif %}</h1>
+<dl class="facts">
+  <dt>Status</dt><dd><span class="pill pill-{{ fault.status }}">{{ fault.status|capitalize }}</span></dd>
+  <dt>Fault</dt><dd>{{ labels.get(fault.fault_type, fault.fault_type) }}</dd>
+  <dt>First reported</dt><dd>{{ fault.created_at[:10] }}</dd>
+  <dt>Reminders sent</dt><dd>{{ fault.followups_sent }}</dd>
+  <dt>People affected</dt><dd>{{ fault.reporter_count }}</dd>
+  <dt>City reference</dt><dd>{{ fault.city_reference or 'Not received yet' }}</dd>
+  {% if fault.fixed_at %}<dt>Fixed on</dt><dd>{{ fault.fixed_at[:10] }}</dd>{% endif %}
+</dl>
+
+{% if fault.status in ('open', 'escalated') %}
+<section aria-labelledby="more-h" class="panel">
+  <h2 id="more-h">Push it further</h2>
+  <p class="hint">We’re already emailing the city every working day. These help it get noticed faster.</p>
+
+  {% if not seen and not is_new and not is_dup %}
+  <form method="post" action="{{ url_for('metoo', public_id=fault.public_id) }}">
+    <button type="submit" class="big">I see this broken light too</button>
+  </form>
+  {% endif %}
+
+  <ul class="channels">
+    <li>
+      <a class="btn" href="{{ share.call_href }}">Call {{ share.call_label }}</a>
+      <span class="hint">{{ share.call_number }}. Quote {% if fault.city_reference %}reference {{ fault.city_reference }}{% else %}the intersection and ask for a reference number{% endif %}.</span>
+    </li>
+    <li>
+      <a class="btn" href="{{ share.x_href }}" target="_blank" rel="noopener">Post on X<span class="vh"> (opens in a new tab)</span></a>
+      <span class="hint">Tags {{ share.x_handles }}. You review the post before it goes out.</span>
+    </li>
+    <li>
+      <a class="btn" href="{{ share.whatsapp_href }}" target="_blank" rel="noopener">Share on WhatsApp<span class="vh"> (opens in a new tab)</span></a>
+      <span class="hint">Send to your residents’ group or ward councillor.</span>
+    </li>
+    <li>
+      <button type="button" class="btn secondary" id="copy-btn" data-text="{{ share.text }}" hidden>Copy report text</button>
+      <span class="hint" id="copy-status" role="status" aria-live="polite"></span>
+    </li>
+  </ul>
+  <details>
+    <summary>See the report text</summary>
+    <p class="quote">{{ share.text }}</p>
+  </details>
+</section>
+{% endif %}
+
+{% if can_manage %}
+<section aria-labelledby="manage-h" class="panel">
+  <h2 id="manage-h">Update this report</h2>
+  <form method="post" action="{{ url_for('update', public_id=fault.public_id) }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    <div class="field">
+      <label for="city_reference">Reference number from the city</label>
+      <p class="hint" id="ref-hint">If the city replies or gives you a reference on the phone, add it so reminders quote it.</p>
+      <input id="city_reference" name="city_reference" value="{{ fault.city_reference or '' }}" aria-describedby="ref-hint">
+    </div>
+    <button type="submit">Save reference</button>
+  </form>
+  <form method="post" action="{{ url_for('update', public_id=fault.public_id) }}" class="actions">
+    <input type="hidden" name="token" value="{{ token }}">
+    {% if fault.status != 'fixed' %}<button name="action" value="fixed">It’s fixed — stop reminders</button>{% endif %}
+    {% if fault.status == 'open' %}<button name="action" value="paused" class="secondary">Pause reminders</button>{% endif %}
+    {% if fault.status != 'open' %}<button name="action" value="open" class="secondary">It’s broken again — resume</button>{% endif %}
+  </form>
+</section>
+{% endif %}
+
+<section aria-labelledby="log-h">
+  <h2 id="log-h">Emails sent to the city</h2>
+  {% if emails %}
+  <ol class="log">
+    {% for e in emails %}
+    <li>
+      <details>
+        <summary>{{ e.sent_at[:16].replace('T', ' ') }} UTC — {{ e.kind|capitalize }}{% if e.dry_run %} (test mode, not actually sent){% endif %}</summary>
+        <pre>{{ e.body }}</pre>
+      </details>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p>No emails yet.</p>{% endif %}
+</section>
+
+<script>
+  (function () {
+    var b = document.getElementById('copy-btn');
+    if (!b || !navigator.clipboard) return;
+    b.hidden = false;
+    b.addEventListener('click', function () {
+      navigator.clipboard.writeText(b.dataset.text).then(function () {
+        document.getElementById('copy-status').textContent = 'Copied. Paste it into an email, SMS or social post.';
+      });
+    });
+  })();
+</script>
+{% endblock %}

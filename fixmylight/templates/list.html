@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}All reported faults{% endblock %}
+{% block content %}
+<h1>All reported faults</h1>
+{% if faults %}
+<div class="table-wrap" role="region" aria-labelledby="t-cap" tabindex="0">
+<table>
+  <caption id="t-cap">Traffic light faults, open ones first</caption>
+  <thead><tr><th scope="col">Intersection</th><th scope="col">Fault</th><th scope="col">Status</th>
+    <th scope="col">Reported</th><th scope="col">Reminders</th><th scope="col">People</th></tr></thead>
+  <tbody>
+  {% for f in faults %}
+  <tr>
+    <th scope="row"><a href="{{ url_for('status', public_id=f.public_id) }}">{{ f.intersection }}</a></th>
+    <td>{{ labels.get(f.fault_type, f.fault_type) }}</td>
+    <td><span class="pill pill-{{ f.status }}">{{ f.status|capitalize }}</span></td>
+    <td>{{ f.created_at[:10] }}</td>
+    <td>{{ f.followups_sent }}</td>
+    <td>{{ f.reporter_count }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p>No faults reported yet. <a href="{{ url_for('index') }}">Report one</a>.</p>{% endif %}
+{% endblock %}

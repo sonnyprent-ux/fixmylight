@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{% if errors %}Error: {% endif %}Report a broken traffic light{% endblock %}
+{% block content %}
+<h1>Report a broken traffic light</h1>
+<p class="lead">We email the Johannesburg Roads Agency for you, then send one polite reminder each
+working day until the light is fixed. If someone has already reported the same light, your report is
+added to theirs so the city sees how many people are affected.</p>
+
+{% if errors %}
+<div class="error-summary" role="alert" tabindex="-1" id="error-summary">
+  <h2>There {{ 'is a problem' if errors|length == 1 else 'are ' ~ errors|length ~ ' problems' }}</h2>
+  <ul>
+    {% for field, msg in errors.items() %}<li><a href="#{{ field }}">{{ msg }}</a></li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('report') }}" novalidate>
+  <div class="field {% if errors.intersection %}has-error{% endif %}">
+    <label for="intersection">Where is the traffic light? <span class="req">(required)</span></label>
+    <p class="hint" id="intersection-hint">Name the two roads that cross, for example “Jan Smuts Ave and Bolton Rd”.</p>
+    {% if errors.intersection %}<p class="error" id="intersection-error"><span class="vh">Error:</span> {{ errors.intersection }}</p>{% endif %}
+    <input id="intersection" name="intersection" type="text" autocomplete="off" required
+           value="{{ form.intersection or '' }}"
+           aria-describedby="intersection-hint{% if errors.intersection %} intersection-error{% endif %}"
+           {% if errors.intersection %}aria-invalid="true"{% endif %}>
+  </div>
+
+  <div class="field">
+    <label for="suburb">Suburb <span class="opt">(optional)</span></label>
+    <input id="suburb" name="suburb" type="text" autocomplete="address-level3" value="{{ form.suburb or '' }}">
+  </div>
+
+  <fieldset class="field {% if errors.fault_type %}has-error{% endif %}" id="fault_type"
+            {% if errors.fault_type %}aria-describedby="fault_type-error"{% endif %}>
+    <legend>What is wrong? <span class="req">(required)</span></legend>
+    {% if errors.fault_type %}<p class="error" id="fault_type-error"><span class="vh">Error:</span> {{ errors.fault_type }}</p>{% endif %}
+    {% for key, label in labels.items() %}
+    <div class="radio">
+      <input type="radio" id="ft-{{ key }}" name="fault_type" value="{{ key }}"
+             {% if form.fault_type == key %}checked{% endif %}>
+      <label for="ft-{{ key }}">{{ label }}</label>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  <div class="field">
+    <label for="details">Anything else the repair team should know? <span class="opt">(optional)</span></label>
+    <p class="hint" id="details-hint">For example which direction, how long it has been out, or if a pole is lying in the road.</p>
+    <textarea id="details" name="details" rows="4" maxlength="1000" aria-describedby="details-hint">{{ form.details or '' }}</textarea>
+  </div>
+
+  <div class="field" id="location-field">
+    <input type="hidden" name="lat" id="lat" value="{{ form.lat or '' }}">
+    <input type="hidden" name="lng" id="lng" value="{{ form.lng or '' }}">
+    <button type="button" class="secondary" id="use-location" hidden>Add my current location</button>
+    <p class="hint" id="location-status" role="status" aria-live="polite"></p>
+  </div>
+
+  <div class="hp" aria-hidden="true">
+    <label for="website">Leave this empty</label>
+    <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+  </div>
+
+  <button type="submit" class="big">Send report</button>
+</form>
+
+{% if recent %}
+<section aria-labelledby="recent-h" class="recent">
+  <h2 id="recent-h">Recently reported</h2>
+  <p class="hint">Is yours here? Open it and tap “I see this broken light too”.</p>
+  <ul>
+    {% for f in recent %}
+    <li><a href="{{ url_for('status', public_id=f.public_id) }}">{{ f.intersection }}</a>
+        <span class="hint">· {{ f.reporter_count }} {{ 'person' if f.reporter_count == 1 else 'people' }} · since {{ f.created_at[:10] }}</span></li>
+    {% endfor %}
+  </ul>
+  <p><a href="{{ url_for('faults') }}">See all faults</a></p>
+</section>
+{% endif %}
+
+<script>
+  // Progressive enhancement: the form works fully without JavaScript.
+  (function () {
+    var s = document.getElementById('error-summary'); if (s) s.focus();
+    if (!('geolocation' in navigator)) return;
+    var btn = document.getElementById('use-location'), out = document.getElementById('location-status');
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      out.textContent = 'Finding your location…';
+      navigator.geolocation.getCurrentPosition(function (p) {
+        document.getElementById('lat').value = p.coords.latitude.toFixed(6);
+        document.getElementById('lng').value = p.coords.longitude.toFixed(6);
+        out.textContent = 'Location added (accurate to about ' + Math.round(p.coords.accuracy) + ' metres).';
+      }, function () {
+        out.textContent = 'We could not get your location. That is fine — the intersection name is enough.';
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    });
+  })();
+</script>
+{% endblock %}

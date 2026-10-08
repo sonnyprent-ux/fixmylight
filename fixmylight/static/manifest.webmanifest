@@ -1,0 +1,14 @@
+{
+  "name": "FixMyLight — report broken traffic lights",
+  "short_name": "FixMyLight",
+  "description": "Report a broken traffic light once; we follow up with the city every working day until it's fixed.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b5d1e",
+  "lang": "en-ZA",
+  "icons": [
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

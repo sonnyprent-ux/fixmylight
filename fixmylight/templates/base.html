@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Report a broken traffic light{% endblock %} · FixMyLight</title>
+  <meta name="description" content="Report a broken traffic light once. We follow up with the city every working day until it’s fixed.">
+  <meta name="theme-color" content="#0b5d1e">
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="site">
+    <p class="brand"><a href="{{ url_for('index') }}"><span aria-hidden="true">🚦</span> FixMyLight</a></p>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="{{ url_for('index') }}">Report</a></li>
+        <li><a href="{{ url_for('faults') }}">All faults</a></li>
+        <li><a href="{{ url_for('about') }}">How it works</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site">
+    <p><strong>Safety first:</strong> never use your phone while driving. Report once you have stopped safely,
+       or ask a passenger. Treat a dead traffic light as a four-way stop.</p>
+    <p>Free and open source. Not run by the {{ cfg.CITY_NAME }}. Emergencies: 10111 or 112.</p>
+  </footer>
+</body>
+</html>

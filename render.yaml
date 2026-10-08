@@ -1,0 +1,43 @@
+# One-click deploy to Render: https://render.com/deploy?repo=<your GitHub repo URL>
+# Uses a paid always-on instance with a persistent disk: Render's free services
+# spin down when idle and lose local files, which would wipe reports and stop the daily job.
+services:
+  - type: web
+    name: fixmylight
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /healthz
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: FIXMYLIGHT_DRY_RUN
+        value: "true"            # switch to false once SMTP and recipients are confirmed
+      - key: FIXMYLIGHT_TO
+        value: hotline@jra.org.za
+      - key: FIXMYLIGHT_CC
+        sync: false
+      - key: FIXMYLIGHT_FROM
+        sync: false
+      - key: FIXMYLIGHT_REPLY_TO
+        sync: false
+      - key: FIXMYLIGHT_BASE_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: FIXMYLIGHT_SECRET
+        generateValue: true
+      - key: FIXMYLIGHT_ADMIN_TOKEN
+        generateValue: true
+      - key: FIXMYLIGHT_RUN_AT
+        value: "07:10"
+      - key: ANTHROPIC_API_KEY
+        sync: false

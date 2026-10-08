@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}How it works{% endblock %}
+{% block content %}
+<h1>How FixMyLight works</h1>
+<ol class="steps">
+  <li><strong>You report</strong> a broken traffic light. It takes about 30 seconds and you don’t need an account.</li>
+  <li><strong>We email the {{ cfg.CITY_NAME }}’s roads agency</strong> with the location, the fault and a map link.</li>
+  <li><strong>Every working day</strong> we send one polite reminder in the same email thread, saying how long it has been
+      broken and how many people reported it.</li>
+  <li><strong>We stop</strong> as soon as anyone marks it fixed. After {{ cfg.MAX_FOLLOWUPS }} reminders we flag it for
+      escalation to the ward councillor.</li>
+</ol>
+<h2>Why only one email a day?</h2>
+<p>A flooded inbox gets filtered. One clear, factual thread per light — with a growing count of affected people — is
+   harder to ignore than hundreds of separate emails.</p>
+<h2>Your privacy</h2>
+<p>We don’t ask for your name, email or phone number. If you add your location, only the coordinates of the traffic
+   light are stored and shared with the city.</p>
+<h2>Who runs this?</h2>
+<p>FixMyLight is free, open-source software. It is not run by the {{ cfg.CITY_NAME }}.
+   For emergencies call 10111 or 112.</p>
+{% endblock %}
